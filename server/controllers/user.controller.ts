@@ -3,10 +3,15 @@ import { User, IUser } from "../models/user.model";
 import ErrorHandler from "../utils/ErrorHandler";
 import { catchAsync } from "../middleware/catchAsynct";
 import jwt, { Secret } from "jsonwebtoken";
-import ejs from "ejs";
-import path from "path";
+import crypto from "crypto";
 import { sendMail } from "../utils/sendMail";
-import { sendToken } from "../utils/jwt";
+import {
+ accessTokenOptions,
+ refreshTokenOptions,
+ sendToken,
+} from "../utils/jwt";
+import { redis } from "../utils/redis";
+import { getUserById } from "../services/user.service";
 require("dotenv").config();
 
 // Register a user => /api/v1/users/register
@@ -139,6 +144,7 @@ export const logoutUser = catchAsync(
  async (req: Request, res: Response, next: NextFunction) => {
   res.cookie("access_token", "", { maxAge: 1 });
   res.cookie("refresh_token", "", { maxAge: 1 });
+  redis.del(req.user?._id as string);
   res.status(200).json({
    success: true,
    message: "Logged out successfully",
@@ -146,4 +152,74 @@ export const logoutUser = catchAsync(
  }
 );
 
-// Get user details => /api/v1/users/me
+// update access token => /api/v1/users/update-access-token
+export const updateAccessToken = catchAsync(
+ async (req: Request, res: Response, next: NextFunction) => {
+  const refresh_token = req.cookies.refresh_token;
+  const decoded = jwt.verify(
+   refresh_token,
+   process.env.REFRESH_TOKEN as Secret
+  ) as { id: string };
+  if (!decoded) {
+   return next(new ErrorHandler("Refresh token is not valid", 400));
+  }
+
+  const session = await redis.get(decoded.id);
+  if (!session) {
+   return next(new ErrorHandler("Please login to access this resource", 400));
+  }
+  const user = JSON.parse(session);
+
+  const accessToken = jwt.sign(
+   { id: user._id },
+   process.env.ACCESS_TOKEN as Secret,
+   {
+    expiresIn: "5m",
+   }
+  );
+  const refreshToken = jwt.sign(
+   { id: user._id },
+   process.env.REFRESH_TOKEN as Secret,
+   {
+    expiresIn: "30d",
+   }
+  );
+  res.cookie("access_token", accessToken, accessTokenOptions);
+  res.cookie("refresh_token", refreshToken, refreshTokenOptions);
+  res.status(200).json({
+   success: true,
+   accessToken,
+   refreshToken,
+  });
+ }
+);
+
+// Get user info => /api/v1/users/me
+export const getUserInfo = catchAsync(
+ async (req: Request, res: Response, next: NextFunction) => {
+  getUserById((req.user?._id as string) || "", res);
+ }
+);
+
+// social auth => /api/v1/users/social-auth
+interface ISocialAuthRequest {
+ email: string;
+ name: string;
+ avatar: string;
+}
+export const socialAuth = catchAsync(
+ async (req: Request, res: Response, next: NextFunction) => {
+  let user;
+  const { email, name, avatar }: ISocialAuthRequest = req.body;
+  user = await User.findOne({ email });
+  if (!user) {
+   user = await User.create({
+    name,
+    email,
+    avatar,
+    password: crypto.randomBytes(20).toString("hex"),
+   });
+  }
+  sendToken(user as IUser, 200, res);
+ }
+);
