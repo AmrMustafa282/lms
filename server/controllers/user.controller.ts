@@ -6,6 +6,7 @@ import jwt, { Secret } from "jsonwebtoken";
 import ejs from "ejs";
 import path from "path";
 import { sendMail } from "../utils/sendMail";
+import { sendToken } from "../utils/jwt";
 require("dotenv").config();
 
 // Register a user => /api/v1/users/register
@@ -109,3 +110,40 @@ export const activateUser = catchAsync(
   });
  }
 );
+
+// Login user => /api/v1/users/login
+interface ILoginRequest {
+ email: string;
+ password: string;
+}
+export const loginUser = catchAsync(
+ async (req: Request, res: Response, next: NextFunction) => {
+  const { email, password }: ILoginRequest = req.body;
+  if (!email || !password) {
+   return next(new ErrorHandler("Please enter email and password", 400));
+  }
+  const user = await User.findOne({ email }).select("+password");
+  if (!user) {
+   return next(new ErrorHandler("User not found", 400));
+  }
+  const isPasswordCorrect = await user.comparePassword(password);
+  if (!isPasswordCorrect) {
+   return next(new ErrorHandler("Incorrect password", 400));
+  }
+  sendToken(user, 200, res);
+ }
+);
+
+// Logout user => /api/v1/users/logout
+export const logoutUser = catchAsync(
+ async (req: Request, res: Response, next: NextFunction) => {
+  res.cookie("access_token", "", { maxAge: 1 });
+  res.cookie("refresh_token", "", { maxAge: 1 });
+  res.status(200).json({
+   success: true,
+   message: "Logged out successfully",
+  });
+ }
+);
+
+// Get user details => /api/v1/users/me
