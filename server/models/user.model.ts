@@ -77,19 +77,18 @@ userSchema.pre<IUser>("save", async function (next) {
 });
 
 userSchema.methods.SignAccessToken = function () {
- return jwt.sign({ id: this._id }, process.env.ACCESS_TOKEN || '', {
+ return jwt.sign({ id: this._id }, process.env.ACCESS_TOKEN || "", {
   expiresIn: "5m",
  });
 };
 userSchema.methods.SignRefreshToken = function () {
-  return jwt.sign({ id: this._id }, process.env.REFRESH_TOKEN || "", {
-   expiresIn: "30d",
-  });
- }
+ return jwt.sign({ id: this._id }, process.env.REFRESH_TOKEN || "", {
+  expiresIn: "30d",
+ });
+};
 
 userSchema.methods.comparePassword = async function (enteredPassword: string) {
  return await bcrypt.compare(enteredPassword, this.password);
 };
-
 
 export const User = mongoose.model<IUser>("User", userSchema);
