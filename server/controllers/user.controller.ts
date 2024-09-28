@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { User, IUser } from "../models/user.model";
 import ErrorHandler from "../utils/ErrorHandler";
-import { catchAsync } from "../middleware/catchAsynct";
+import { catchAsync } from "../middleware/catchAsync";
 import jwt, { Secret } from "jsonwebtoken";
 import crypto from "crypto";
 import { sendMail } from "../utils/sendMail";
