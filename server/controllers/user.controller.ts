@@ -44,7 +44,7 @@ const createActivationToken = (user: IRegistrationBody): IActivationToken => {
 };
 export const registerUser = catchAsync(
  async (req: Request, res: Response, next: NextFunction) => {
-  const { name, email, password, avatar }: IRegistrationBody = req.body;
+  const { name, email, password }: IRegistrationBody = req.body;
 
   const isEmailExist = await User.findOne({ email });
   if (isEmailExist) {
@@ -55,32 +55,31 @@ export const registerUser = catchAsync(
    name,
    email,
    password,
-   avatar,
   };
   const activationToken = createActivationToken(user);
   const activationCode = activationToken.activationCode;
 
   const data = { user: { ...user, activationCode } };
-  // try {
-  await sendMail({
-   email: user.email,
-   subject: "Acctivate your account",
-   template: "activation-mail",
-   data,
-  });
+  try {
+   await sendMail({
+    email: user.email,
+    subject: "Acctivate your account",
+    template: "activation-mail",
+    data,
+   });
+   res.status(201).json({
+    success: true,
+    message: "Please check your email to activate your account",
+    activationToken: activationToken.token,
+   });
+  } catch (error: any) {
+   return next(new ErrorHandler(error.message, 500));
+  }
+
   res.status(201).json({
    success: true,
-   message: "Please check your email to activate your account",
-   activationToken: activationToken.token,
+   message: "Account Registered Successfully",
   });
-  // } catch (error: any) {
-  //  return next(new ErrorHandler(error.message, 500));
-  // }
-
-  // res.status(201).json({
-  //  success: true,
-  //  message: "Account Registered Successfully",
-  // });
  }
 );
 
@@ -134,7 +133,7 @@ export const loginUser = catchAsync(
   }
   const isPasswordCorrect = await user.comparePassword(password);
   if (!isPasswordCorrect) {
-   return next(new ErrorHandler("Incorrect password", 400));
+   return next(new ErrorHandler("email or password are incorrect", 400));
   }
   sendToken(user, 200, res);
  }
