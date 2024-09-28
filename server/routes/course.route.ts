@@ -2,6 +2,8 @@ import express from "express";
 import {
  addAnswer,
  addQuestion,
+ addReplyToReview,
+ addReview,
  getAllCourses,
  getCourseByUser,
  getSingleCourse,
@@ -23,5 +25,12 @@ router.get("/", getAllCourses);
 router.get("/content/:id", isAuthenticated, getCourseByUser);
 router.patch("/add-question", isAuthenticated, addQuestion);
 router.patch("/add-answer", isAuthenticated, addAnswer);
+router.patch("/add-review/:id", isAuthenticated, addReview);
+router.patch(
+ "/add-reply-to-review",
+ isAuthenticated,
+ authorizeRoles("admin"),
+ addReplyToReview
+);
 router.get("/:id", getSingleCourse);
 export default router;

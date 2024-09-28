@@ -8,10 +8,10 @@ interface IComment extends mongoose.Document {
 }
 
 interface IReview extends mongoose.Document {
- user: object;
+ user: IUser;
  rating: number;
  comment: string;
- commentReplies: IComment[];
+ commentReplies?: IComment[];
 }
 interface ILink extends mongoose.Document {
  title: string;
@@ -63,6 +63,7 @@ const reviewSchema = new mongoose.Schema<IReview>(
   comment: {
    type: String,
   },
+  commentReplies: [Object],
  },
  { timestamps: true }
 );

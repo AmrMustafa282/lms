@@ -237,3 +237,93 @@ export const addAnswer = catchAsync(
   });
  }
 );
+
+// add review to course
+interface IAddReviewData {
+ review: string;
+ courseId: string;
+ rating: number;
+ userId: string;
+}
+export const addReview = catchAsync(
+ async (req: Request, res: Response, next: NextFunction) => {
+  const userCourseList = req.user?.courses;
+  const courseId = req.params.id;
+  const courseExists = userCourseList?.find(
+   (c: any) => c._id.toString() === courseId
+  );
+  if (!courseExists) {
+   return next(
+    new ErrorHandler("You are not eligible to review this course", 404)
+   );
+  }
+
+  const course = await Course.findById(courseId);
+  if (!course) {
+   return next(new ErrorHandler("Course not found", 404));
+  }
+  const { review, rating }: IAddReviewData = req.body;
+  const reviewData: any = {
+   user: req.user,
+   comment: review,
+   rating,
+  };
+
+  course.reviews.push(reviewData);
+  let avg = 0;
+  course.reviews.forEach((r: any) => {
+   avg += r.rating;
+  });
+  course.ratings = avg / course.reviews.length;
+  await course.save();
+  const notification = {
+   title: "New Review Received",
+   message: `${req.user?.name} has given a review on ${course.name}`,
+  };
+  // create a notification
+  res.status(200).json({
+   success: true,
+   course,
+  });
+ }
+);
+
+// add reply to review
+interface IAddReplyData {
+ comment: string;
+ reviewId: string;
+ courseId: string;
+}
+export const addReplyToReview = catchAsync(
+ async (req: Request, res: Response, next: NextFunction) => {
+  const { comment, reviewId, courseId }: IAddReplyData = req.body;
+  if (!comment || !reviewId || !courseId) {
+   return next(new ErrorHandler("Please enter all fields", 400));
+  }
+  const course = await Course.findById(courseId);
+  if (!course) {
+   return next(new ErrorHandler("Course not found", 404));
+  }
+
+  const review = course.reviews.find((r: any) => r._id.toString() === reviewId);
+  if (!review) {
+   return next(new ErrorHandler("Review not found", 404));
+  }
+
+  const newReply: any = {
+   user: req.user,
+   comment,
+  };
+
+  if (!review.commentReplies) {
+   review.commentReplies = [];
+  }
+  review.commentReplies?.push(newReply);
+
+  await course.save();
+  res.status(201).json({
+   success: true,
+   course,
+  });
+ }
+);
