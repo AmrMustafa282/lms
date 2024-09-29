@@ -11,7 +11,6 @@ const notificationSchema = new mongoose.Schema<INotification>(
   title: { type: String, required: true },
   message: { type: String, required: true },
   status: { type: String, default: "unread", required: true },
-  userId: { type: String, required: true },
  },
  {
   timestamps: true,
