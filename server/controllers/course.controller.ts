@@ -1,14 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import Course from "../models/course.model";
-
+import Notification from "../models/notification.model";
 import { catchAsync } from "../middleware/catchAsync";
 import cloudinary from "cloudinary";
 import { createCourse } from "../services/course.service";
 import ErrorHandler from "../utils/ErrorHandler";
 import { redis } from "../utils/redis";
 import mongoose from "mongoose";
-import ejs from "ejs";
-import path from "path";
 import { sendMail } from "../utils/sendMail";
 
 // upload course
@@ -160,6 +158,11 @@ export const addQuestion = catchAsync(
   };
 
   content.questions.push(newQuestion);
+  await Notification.create({
+   user: req.user._id,
+   title: "New Question",
+   message: `You have a new question for ${content.title}`,
+  });
   await course.save();
   res.status(201).json({
    success: true,
@@ -217,7 +220,11 @@ export const addAnswer = catchAsync(
   console.log(question);
 
   if (req.user?._id === question.user._id) {
-   // create a notification
+   await Notification.create({
+    user: req.user._id,
+    title: "New Question Reply",
+    message: `You have a new question reply for ${content.title}`,
+   });
   } else {
    // send an email to the user
    const data = {
