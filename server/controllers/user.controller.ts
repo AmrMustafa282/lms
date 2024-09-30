@@ -325,3 +325,14 @@ export const updateAvatar = catchAsync(
   });
  }
 );
+
+// get all users -- only for admins
+export const getAllUsers = catchAsync(
+ async (req: Request, res: Response, next: NextFunction) => {
+  const users = await User.find().sort("-createdAt");
+  res.status(200).json({
+   success: true,
+   users,
+  });
+ }
+);

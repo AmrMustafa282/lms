@@ -14,3 +14,13 @@ export const getUserById = async (id: string, res: Response) => {
   user,
  });
 };
+
+// get all users
+const getAllUsers = async (res: Response) => {
+ const users = await User.find().sort("-createdAt");
+
+ res.status(200).json({
+  success: true,
+  users,
+ });
+};

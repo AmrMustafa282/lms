@@ -70,3 +70,14 @@ export const createOrder = catchAsync(
   });
  }
 );
+
+// get all orders -- only for admin
+export const getAllOrders = catchAsync(
+ async (req: Request, res: Response, next: NextFunction) => {
+  const orders = await Order.find().sort("-createdAt");
+  res.status(200).json({
+   success: true,
+   orders,
+  });
+ }
+);

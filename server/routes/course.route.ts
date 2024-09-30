@@ -5,6 +5,7 @@ import {
  addReplyToReview,
  addReview,
  getAllCourses,
+ getAllCoursesAdmin,
  getCourseByUser,
  getSingleCourse,
  updateCourse,
@@ -22,6 +23,12 @@ router.patch(
  updateCourse
 );
 router.get("/", getAllCourses);
+router.get(
+ "/all",
+ isAuthenticated,
+ authorizeRoles("admin"),
+ getAllCoursesAdmin
+);
 router.get("/content/:id", isAuthenticated, getCourseByUser);
 router.patch("/add-question", isAuthenticated, addQuestion);
 router.patch("/add-answer", isAuthenticated, addAnswer);

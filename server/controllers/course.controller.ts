@@ -334,3 +334,14 @@ export const addReplyToReview = catchAsync(
   });
  }
 );
+
+// get all courses -- only for admin
+export const getAllCoursesAdmin = catchAsync(
+ async (req: Request, res: Response, next: NextFunction) => {
+  const courses = await Course.find().sort("-createdAt");
+  res.status(200).json({
+   success: true,
+   courses,
+  });
+ }
+);
