@@ -64,6 +64,7 @@ export const createOrder = catchAsync(
    title: "New Order",
    message: `You have a new order for ${course.name}`,
   });
+
   res.status(201).json({
    success: true,
    order,

@@ -336,3 +336,16 @@ export const getAllUsers = catchAsync(
   });
  }
 );
+
+// update user role -- only for admins
+export const updateUserRole = catchAsync(
+ async (req: Request, res: Response, next: NextFunction) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+   return next(new ErrorHandler("User not found", 404));
+  }
+  user.role = req.body.role;
+  await user.save();
+  res.status(200).json({ success: true, user });
+ }
+);

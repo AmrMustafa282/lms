@@ -11,6 +11,7 @@ import {
  updateAvatar,
  updatePassword,
  updateUserInfo,
+ updateUserRole,
 } from "../controllers/user.controller";
 import { authorizeRoles, isAuthenticated } from "../middleware/auth";
 
@@ -26,5 +27,11 @@ router.post("/social-auth", socialAuth);
 router.post("/update-user-info", isAuthenticated, updateUserInfo);
 router.patch("/update-password", isAuthenticated, updatePassword);
 router.patch("/update-avatar", isAuthenticated, updateAvatar);
+router.patch(
+ "/update-role/:id",
+ isAuthenticated,
+ authorizeRoles("admin"),
+ updateUserRole
+);
 router.get("/all", isAuthenticated, authorizeRoles("admin"), getAllUsers);
 export default router;

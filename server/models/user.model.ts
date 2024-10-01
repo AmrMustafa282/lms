@@ -12,7 +12,10 @@ export interface IUser extends mongoose.Document {
   public_id: string;
   url: string;
  };
- role: string;
+ role: {
+  type: string;
+  enum: ["user", "admin"];
+ };
  isVerified: boolean;
  courses: Array<{ courseId: string }>;
  comparePassword: (enteredPassword: string) => Promise<boolean>;
